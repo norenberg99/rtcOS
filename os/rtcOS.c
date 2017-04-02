@@ -38,7 +38,7 @@ typedef struct _OSFIFO_t
     osIndex_t       mHead;
     osIndex_t       mTail;
     osIndex_t       mCount;
-    osMsg_t     	mBuffer[MAX_MESSAGES_IN_SYSTEM];
+    osMsg_t         mBuffer[MAX_MESSAGES_IN_SYSTEM];
 } OSFIFO_t, *OSFIFOPTR_t;
 #endif
 
@@ -114,7 +114,7 @@ static int os_GetFIFOCount( osTaskID_t taskID );
 ******************************************************************************/
 osStatus_t osInit( void )
 {
-	osIndex_t taskIdx, futureEventIdx;
+    osIndex_t taskIdx, futureEventIdx;
     
     // clear out the task info
     for ( taskIdx = 0; taskIdx < MAX_TASKS_IN_SYSTEM; ++taskIdx )
@@ -218,7 +218,7 @@ static bool os_FindReadyTask( osTaskID_t *newCurrTask )
     osIndex_t taskIdx;
     
     // find the first task that has events
-    for ( taskIdx = 0; ( taskIdx < gOS.mTaskCount ); ++taskIdx )
+    taskIdx = 0; ( taskIdx < gOS.mTaskCount ); ++taskIdx )
     {
 #if (defined MAX_MESSAGES_IN_SYSTEM) && (MAX_MESSAGES_IN_SYSTEM > 0)
         if (( gOS.mTaskInfoArray[ taskIdx ].mEventFlags != 0 ) ||
@@ -325,7 +325,7 @@ void osRun( void )
 ******************************************************************************/
 void osUpdateTick( void )
 {
-	osIndex_t idx;
+    osIndex_t idx;
     CRITICAL_SECTION_VARIABLE;
     
     ENTER_CRITICAL_SECTION;
@@ -372,7 +372,7 @@ void osUpdateTick( void )
 ******************************************************************************/
 static osStatus_t os_FindFutureEvent( osTaskID_t taskID, osEvents_t eventFlag, osIndex_t *foundSlot )
 {
-	osIndex_t idx;
+    osIndex_t idx;
 
     for( idx = 0; idx < MAX_FUTURE_EVENTS; ++idx )
     {   // look through the array to find the task + event combo
@@ -505,17 +505,20 @@ static osStatus_t os_AddFutureEvent( osTaskID_t taskID, osEvents_t eventFlag, os
             
     @return osStatus_t  
 ******************************************************************************/
+#define EVENT_BIT_COUNT        ( sizeof( osEvents_t ) * 8 )    
 static osStatus_t os_CountEvents( osEvents_t eventFlag )
 {
+#if 0   // if we want to enforce only setting one event on each call
     int idx;
     int bitCount = 0;
 
     // walk through the event bit flags and count them
-    for ( idx = 0; ( idx < sizeof( osEvents_t )) && ( eventFlag ); ++idx )
+    for ( idx = 0; ( idx < EVENT_BIT_COUNT ) && ( eventFlag ); ++idx )
     {
-        if ( eventFlag & ( 1 << idx ))
+        if ( eventFlag & 1 ))
         {   // bit is set
             ++bitCount;
+            eventFlag = eventFlag >> 1; 
         }
     }
 
@@ -530,7 +533,18 @@ static osStatus_t os_CountEvents( osEvents_t eventFlag )
     }
     
     // more than 1 event flag was set
-    return OS_ERR_TOO_MANY_EVENTS;   
+    return OS_ERR_TOO_MANY_EVENTS;  
+#else
+    // right now we only care if at least one flag is set
+    if ( eventFlag )
+    {   // at least one event is set
+        return OS_ERR_NONE;
+    }
+    else
+    {   // no events are set
+        return OS_ERR_NO_EVENT;
+    }
+#endif    
 }
 
 /******************************************************************************
@@ -637,7 +651,7 @@ osStatus_t osClearEvent( osTaskID_t taskID, osEvents_t eventFlag )
     @fn     osSetTickCount
 
     @brief  Set the current tick count that is kept by the system.
-			FOR TESTING ONLY, TO CHECK OVERFLOW
+            FOR TESTING ONLY, TO CHECK OVERFLOW
 
     @param  newCount - value for the tick count
             
@@ -645,7 +659,7 @@ osStatus_t osClearEvent( osTaskID_t taskID, osEvents_t eventFlag )
 ******************************************************************************/
 void osSetTickCount( osTick_t newCount )
 {
-	gOS.mSystemTickCount = newCount;
+    gOS.mSystemTickCount = newCount;
 }
 #endif
 
@@ -678,17 +692,6 @@ osTick_t osGetTickCount( void )
     @fn     osTimerCreate
 
     @brief  Create a tick count that is in the future.  
-			As long as the interval between two related events is not 
-			larger than the range of the uint32 there is no problem at all.
-			If you  keep the values as uInt32 and subtract the earlier event 
-			time from the current event time with the subtract function 
-			you will get the correct interval anyhow even if there has 
-			been a counter turn over. This is a feature of proper integer 
-			arithmetic implementation as specified by IEEE and LabVIEW implements 
-			that too. Just try it out by subtracting 4294967295 from 10 
-			both set as unsigned int32 and you will see the result to be 
-			11 which is the difference between the two numbers when looked 
-			at as unsigned int32.
 
     @param  expireTickCount - ticks before timer will expire
             newTimer - a os timer that track the expire time
@@ -716,9 +719,20 @@ osStatus_t osTimerCreate( osTick_t expireTickCount, osTimer_t *newTimer )
     @fn     osTimerExpired
 
     @brief  Client calls this to check if the timer has expired.
+            As long as the interval between two related events is not 
+            larger than the range of the uint32 there is no problem at all.
+            If you  keep the values as uint32 and subtract the earlier event 
+            time from the current event time with the subtract function 
+            you will get the correct interval even if there has 
+            been a counter rollover. This is a feature of proper integer 
+            arithmetic implementation as specified by IEEE and LabVIEW implements 
+            that too. Just try it out by subtracting 4294967295 from 10 
+            both set as unsigned int32 and you will see the result to be 
+            11 which is the difference between the two numbers when looked 
+            at as unsigned int32.
 
     @param  newTimer - contains the tick count of the expiration
-            
+                
     @return osStatus_t  
 ******************************************************************************/
 bool osTimerExpired( osTimer_t *newTimer )
