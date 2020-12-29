@@ -19,11 +19,10 @@
 #include "board_msp430_launchpad.h"
 
 #elif BOARD_ARDUINO_XXXX
-warning Copy the entire arduino_uno directory to your Arduino projects directory
+#error "warning Copy the entire arduino_uno directory to your Arduino projects directory"
 
 #else
-	
-warning No board file has been specified for this build
+#error "warning No board file has been specified for this build"
 
 #endif
 

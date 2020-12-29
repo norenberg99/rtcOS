@@ -218,7 +218,7 @@ static bool os_FindReadyTask( osTaskID_t *newCurrTask )
     osIndex_t taskIdx;
     
     // find the first task that has events
-    taskIdx = 0; ( taskIdx < gOS.mTaskCount ); ++taskIdx )
+    for(taskIdx = 0; ( taskIdx < gOS.mTaskCount ); ++taskIdx )
     {
 #if (defined MAX_MESSAGES_IN_SYSTEM) && (MAX_MESSAGES_IN_SYSTEM > 0)
         if (( gOS.mTaskInfoArray[ taskIdx ].mEventFlags != 0 ) ||

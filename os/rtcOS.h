@@ -127,4 +127,4 @@ osStatus_t osSendMessage( osTaskID_t taskID, osMsg_t pMsg );
 osStatus_t osGetMessage( osMsg_t *pMsg );
 #endif
 
-#endif
+#endif /* RTC_OS_H */
