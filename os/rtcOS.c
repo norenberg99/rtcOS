@@ -47,17 +47,17 @@ typedef struct _OSFIFO_t
 typedef struct _FutureEventInfo_t
 {
     osEvents_t          mEventFlags;
-    osTick_t            mTimeout;
+    volatile osTick_t   mTimeout;
     osTick_t            mReloadTimeout;
     osTaskID_t          mTaskID;
-    bool                mInUse;
+    volatile _bool       mInUse;
 } FutureEventInfo_t;
 
 
 // keeps track of information about each task in the system
 typedef struct _TaskInfo_t
 {
-    osEvents_t              mEventFlags;
+    volatile osEvents_t     mEventFlags;
     pTaskEventHandler_t     mEventHandler;
     osTaskParam_t           mTaskParam;
 #if (defined MAX_MESSAGES_IN_SYSTEM) && (MAX_MESSAGES_IN_SYSTEM > 0)
@@ -73,11 +73,11 @@ typedef struct _OSInfo_t
     // current number of future events in the system
     osTaskID_t              mCurrTask;
     // tracks "time" in the system
-    osTick_t                mSystemTickCount;
+    volatile osTick_t       mSystemTickCount;
     // stores the client routine to be called when the system can sleep
     pSystemSleepHandler_t   mClientSystemSleepHandler;
     // current number of future events in the system
-    osIndex_t               mFutureEventCount;
+    volatile osIndex_t      mFutureEventCount;
     // an array of all the future events to send
     FutureEventInfo_t       mFutureEventArray[MAX_FUTURE_EVENTS];
     // an array of information about each task
@@ -218,7 +218,7 @@ static bool os_FindReadyTask( osTaskID_t *newCurrTask )
     osIndex_t taskIdx;
     
     // find the first task that has events
-    taskIdx = 0; ( taskIdx < gOS.mTaskCount ); ++taskIdx )
+    for(taskIdx = 0; ( taskIdx < gOS.mTaskCount ); ++taskIdx )
     {
 #if (defined MAX_MESSAGES_IN_SYSTEM) && (MAX_MESSAGES_IN_SYSTEM > 0)
         if (( gOS.mTaskInfoArray[ taskIdx ].mEventFlags != 0 ) ||
@@ -341,6 +341,10 @@ void osUpdateTick( void )
             --gOS.mFutureEventArray[idx].mTimeout; 
             if ( gOS.mFutureEventArray[idx].mTimeout == 0 )
             {
+                if(gOS.mFutureEventCount > 0)
+                {
+                    gOS.mFutureEventCount--;
+                }
                 // transfer the future event to the now event since the delay is 0
                 gOS.mTaskInfoArray[gOS.mFutureEventArray[idx].mTaskID].mEventFlags |= 
                     gOS.mFutureEventArray[idx].mEventFlags;
@@ -409,7 +413,10 @@ static osStatus_t os_DeleteFutureEvent( osTaskID_t taskID, osEvents_t eventFlag 
     {   // found the future event
         // disable/delete by setting the slot inUse to FALSE
         gOS.mFutureEventArray[foundSlot].mInUse = FALSE;
-        --gOS.mFutureEventCount;
+        if(gOS.mFutureEventCount > 0)
+        {
+            gOS.mFutureEventCount--;
+        }
         return OS_ERR_NONE;
     }
 
