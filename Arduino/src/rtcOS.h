@@ -50,6 +50,8 @@
 //******************************************************************************
 // Includes
 //******************************************************************************
+#include <Arduino.h>
+
 #include "arduino_board.h"
 
 //******************************************************************************
@@ -113,11 +115,12 @@ osStatus_t osClearEvent( osTaskID_t taskID, osEvents_t eventFlag );
 // create a timer to check if x amount of time has passed since
 // the timer was created.  Call osTimerExpired to find out
 // if the time has expired.
-void osSetTickCount( osTick_t newCount );
 osTick_t osGetTickCount( void );
 osStatus_t osTimerCreate( osTick_t expireTickCount, osTimer_t *newTimer );
 // return true if expired
 bool osTimerExpired( osTimer_t *newTimer );
+// calling osInit will set the default value, this does not need to be called normally
+void osSetTickCount( osTick_t newCount );
 
 
 #if (defined MAX_MESSAGES_IN_SYSTEM) && (MAX_MESSAGES_IN_SYSTEM > 0)

@@ -1,5 +1,5 @@
 /******************************************************************************
-    Filename: board_arduino_uno.h
+    Filename: arduino_board.h
     Description: 
         This file contains defines for the OS for this board.
     
@@ -47,8 +47,8 @@ typedef uint16 osIndex_t;
 //******************************************************************************
 // Define how this system handles critical sections
 //******************************************************************************
-#define ENTER_CRITICAL_SECTION
-#define EXIT_CRITICAL_SECTION
+#define ENTER_CRITICAL_SECTION          noInterrupts()
+#define EXIT_CRITICAL_SECTION           interrupts()   
 #define CRITICAL_SECTION_VARIABLE
 
 //******************************************************************************
@@ -67,7 +67,7 @@ typedef uint16 osIndex_t;
 // This is for each task in the system
 // If you do not want to use messages in your system, set this to 0
 //******************************************************************************
-#define MAX_MESSAGES_IN_SYSTEM          3
+#define MAX_MESSAGES_IN_SYSTEM          3   // 3
 
 
 #endif

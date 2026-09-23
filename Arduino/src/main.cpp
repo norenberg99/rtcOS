@@ -42,8 +42,8 @@ osTimer_t theTimer;
 /******************************************************************************
     @fn     TaskOne
 
-    @brief  This task when it receives an event will turn on the led.  It
-			will then send an event to task 2 to turn off the led.
+    @brief  This task recieves an event every x ms to control the led.
+            No need to reload the timer, it is set to reload
 
     @param	eventFlags - 1 bit flags indicating events
 			msgCount - number of messages waiting for this task
@@ -51,6 +51,9 @@ osTimer_t theTimer;
             
     @return 
 ******************************************************************************/
+
+static uint8 sLedValue = HIGH;
+
 osEvents_t TaskOne( osEvents_t eventFlags, osMsgCount_t msgCount, osTaskParam_t taskParam )
 {
     
@@ -59,12 +62,15 @@ osEvents_t TaskOne( osEvents_t eventFlags, osMsgCount_t msgCount, osTaskParam_t 
         // since it is handled first
         
 		// turn the LED on (HIGH is the voltage level)
-		digitalWrite( LED_PIN, HIGH );   	
+        sLedValue = !sLedValue;
+		digitalWrite( LED_PIN, sLedValue );  
+		// Serial.println( sLedValue, DEC );
+ 	
 		// send event to task 2 to turn off the led
-        osSendEvent( TASK2_ID, T2_EVT_TEST1, 50, DO_NOT_RELOAD_DELAY );
+        //osSendEvent( TASK2_ID, T2_EVT_TEST1, 50, DO_NOT_RELOAD_DELAY );
         
         // then return the events that have NOT been handled
-        return eventFlags & ~T1_EVT_TEST1;
+        //return eventFlags & ~T1_EVT_TEST1;
     }
         
     // maybe there are some events that we do not care about
@@ -207,7 +213,7 @@ osEvents_t TaskFour( osEvents_t eventFlags, osMsgCount_t msgCount, osTaskParam_t
 }
 
 /******************************************************************************
-    @fn     TaskFour
+    @fn     TaskFive
 
     @brief  Task 4 is going to send us a message and then we need to 
 			add 1 to the msg and send it back.  
@@ -299,33 +305,34 @@ void hwInit( void )
 ******************************************************************************/
 void setup() 
 {
-	Serial.begin( 9600 );
-    while ( !Serial );
+	Serial.begin( 115200 );
+    //while ( !Serial );
 
 	hwInit();
     
     osInit();
 	
 	// THIS IS ONLY TO TEST OVERFLOW BY SETTING THE TICKCOUNT NEAR THE OVERFLOW
-	osSetTickCount( 0xFFFFFF00 );
+	//osSetTickCount( 0xFFFFFF00 );
 
 	// register tasks so that they can receive events
     osRegisterTaskEventHandler( TaskOne, 	TASK1_ID, 0 );
-    osRegisterTaskEventHandler( TaskTwo, 	TASK2_ID, 0 ); 
-    osRegisterTaskEventHandler( TaskThree, 	TASK3_ID, 0 ); 
-    osRegisterTaskEventHandler( TaskFour, 	TASK4_ID, 0 ); 
-    osRegisterTaskEventHandler( TaskFive, 	TASK5_ID, 0 ); 
+    //osRegisterTaskEventHandler( TaskTwo, 	TASK2_ID, 0 ); 
+    //osRegisterTaskEventHandler( TaskThree, 	TASK3_ID, 0 ); 
+    //osRegisterTaskEventHandler( TaskFour, 	TASK4_ID, 0 ); 
+    //osRegisterTaskEventHandler( TaskFive, 	TASK5_ID, 0 ); 
     
     // register a routine that will get called if there are no events for any tasks
     osRegisterSystemSleepHandler( SystemSleepHandler );
  
     // send event to turn on led
-    osSendEvent( TASK1_ID, T1_EVT_TEST1, SEND_EVENT_NOW, DO_NOT_RELOAD_DELAY );
+    osSendEvent( TASK1_ID, T1_EVT_TEST1, 5, RELOAD_DELAY );
 	// send event to create the timer
-    osSendEvent( TASK3_ID, T3_EVT_TEST1, SEND_EVENT_NOW, DO_NOT_RELOAD_DELAY );
+    //osSendEvent( TASK3_ID, T3_EVT_TEST1, SEND_EVENT_NOW, DO_NOT_RELOAD_DELAY );
 	// start the messaging exchange with an event
-	osSendEvent( TASK4_ID, T4_EVT_TEST1, SEND_EVENT_NOW, DO_NOT_RELOAD_DELAY );
+	//osSendEvent( TASK4_ID, T4_EVT_TEST1, SEND_EVENT_NOW, DO_NOT_RELOAD_DELAY );
     
+	Serial.println( "Starting the rtcOS!" );
 }
 
 /******************************************************************************
@@ -340,8 +347,7 @@ void setup()
 ******************************************************************************/
 void loop() 
 {
-	Serial.println( "Starting the RTC OS!" );
 
-    // start the system running, it will never return from this routine
+    // start the os running
     osRun();
 }

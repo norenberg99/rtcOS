@@ -20,7 +20,6 @@
 //******************************************************************************
 // Includes
 //******************************************************************************
-#include "stdio.h"
 
 #include "rtcOS.h"
 
@@ -294,8 +293,8 @@ void osRun( void )
 
     // infinite loop for this application
     // spin here and call the task's that have events
-    while ( 1 )
-    {   
+    //while ( 1 )
+    //{   
         ENTER_CRITICAL_SECTION;
         foundReadyTask = os_FindReadyTask( &newCurrTask );
         EXIT_CRITICAL_SECTION;
@@ -309,7 +308,7 @@ void osRun( void )
         {   // no events were found in the system, we could go to sleep here
             ( gOS.mClientSystemSleepHandler )();      
         }
-    }
+    //}
 }
 
 /******************************************************************************
